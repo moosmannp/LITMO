@@ -1,0 +1,3 @@
+# Only for development: the test suite (see README, "Tests")
+-r requirements.txt
+pytest>=8.0

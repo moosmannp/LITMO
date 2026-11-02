@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.venv/
+venv/
+node_modules/
+*.log
+# Gespeicherte Sessions (Projektstand inkl. hochgeladener Daten) — lokal, nicht ins Repository
+data/
+.pytest_cache/
+# enthielt ein GitHub-Token; die Datei bleibt lokal, gehoert aber nicht ins Repository (DECISIONS 139)
+github_push.bat

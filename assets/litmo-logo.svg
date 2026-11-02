@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="LITMO">
+  <style>
+    .cover { fill: #3346B8; }
+    .pages { fill: #FFFFFF; stroke: #3346B8; }
+    .ink { fill: #FFFFFF; stroke: #FFFFFF; }
+    .ribbon { fill: #1B1C1F; }
+    @media (prefers-color-scheme: dark) {
+      .cover { fill: #8C9BFF; }
+      .pages { fill: #0E1120; stroke: #8C9BFF; }
+      .ink { fill: #0E1120; stroke: #0E1120; }
+      .ribbon { fill: #E7E8EA; }
+    }
+  </style>
+  <path class="cover" d="M16 3h32a4 4 0 0 1 4 4v44H16a4 4 0 0 0-4 4V7a4 4 0 0 1 4-4z"/>
+  <path class="pages" d="M52 51v7H16a3.5 3.5 0 0 1 0-7z" stroke-width="2.6" stroke-linejoin="round"/>
+  <path class="ink" d="M35 17L27 32M35 17l8 15" fill="none" stroke-width="2.6" stroke-linecap="round"/>
+  <circle class="ink" cx="35" cy="17" r="4.6" stroke="none"/>
+  <circle class="ink" cx="27" cy="32" r="3.8" stroke="none"/>
+  <circle class="ink" cx="43" cy="32" r="3.8" stroke="none"/>
+  <path class="ribbon" d="M40 55v9l3.5-2.5L47 64v-9z"/>
+</svg>

@@ -1,0 +1,1579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LITMO – literature-driven modular ontologies</title>
+<link rel="icon" type="image/svg+xml" href="/assets/litmo-icon.svg" />
+<script>
+  // Thema: die eigene Wahl (in diesem Browser gemerkt), sonst die Einstellung des Systems
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem('odt.theme'); } catch (e) {}
+    if (t !== 'dark' && t !== 'light') t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+  /* Hell und ruhig (DECISIONS 126): eine Akzentfarbe, Status als Text-, Flaechen- und Randfarbe */
+  :root {
+    --bg: #F6F6F3;
+    --surface: #FFFFFF;
+    --surface2: #FAFAF8;
+    --border: #E3E2DC;
+    --border-strong: #D6D5CE;
+    --accent: #3346B8;
+    --accent-light: #3346B8;
+    --accent-soft: #EEF0FB;
+    --accent-border: #C9CEF0;
+    --success: #1E7046;
+    --success-soft: #E8F3EC;
+    --success-border: #BFDCCB;
+    --warning: #8A5300;
+    --warning-soft: #FDF2DD;
+    --warning-border: #EBCF9C;
+    --error: #B42318;
+    --error-soft: #FCEBEA;
+    --error-border: #EFC2BE;
+    --neutral-soft: #F0F0EC;
+    --neutral-border: #E3E2DC;
+    --code: #0F5C63;
+    --text: #1B1C1F;
+    --text-muted: #5C5F66;
+    --neutral-text: #4A4D54;
+    --row-border: #EFEEE9;
+    --error-strong: #7A1A12;
+    --ring: #C9C8C1;
+    --faint: #85878D;
+    --on-accent: #FFFFFF;
+    --radius: 10px;
+    color-scheme: light;
+    --font: Inter, 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+  }
+  /* Dunkles Thema (DECISIONS 127): dieselben Variablen, umschaltbar in der Kopfzeile */
+  :root[data-theme="dark"] {
+    --bg: #15161A;
+    --surface: #1D1F24;
+    --surface2: #23262C;
+    --border: #33363E;
+    --border-strong: #464A55;
+    --accent: #8C9BFF;
+    --accent-light: #8C9BFF;
+    --accent-soft: #262B47;
+    --accent-border: #3D4677;
+    --success: #5BC489;
+    --success-soft: #17302A;
+    --success-border: #2C5A45;
+    --warning: #E8B04B;
+    --warning-soft: #33280F;
+    --warning-border: #604C1D;
+    --error: #F08A80;
+    --error-soft: #3A1D1B;
+    --error-border: #6B342F;
+    --neutral-soft: #2A2D33;
+    --neutral-border: #33363E;
+    --neutral-text: #C5C8CF;
+    --row-border: #2A2D33;
+    --error-strong: #F6B8B1;
+    --ring: #5A5E68;
+    --faint: #7D818A;
+    --on-accent: #0E1120;
+    --code: #7FD3DB;
+    --text: #E7E8EA;
+    --text-muted: #A3A7AF;
+    color-scheme: dark;
+  }
+  .theme-toggle { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+    border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface); color: var(--text); cursor: pointer; }
+  .theme-toggle:hover { background: var(--neutral-soft); }
+  .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: inline; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45;
+    height: 100vh; display: flex; flex-direction: column; }
+  header, .project-notice { flex-shrink: 0; }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    min-height: 57px;
+  }
+  header .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+  /* das Logo (ein Buch mit Klassenbaum und Lesebaendchen, DECISIONS 129) folgt dem Thema */
+  .logo .logo-cover { fill: var(--accent); }
+  .logo .logo-pages { fill: var(--on-accent); stroke: var(--accent); stroke-width: 2.6; stroke-linejoin: round; }
+  .logo .logo-tree { fill: none; stroke: var(--on-accent); stroke-width: 2.6; stroke-linecap: round; }
+  .logo .logo-node { fill: var(--on-accent); }
+  .logo .logo-ribbon { fill: var(--text); }
+  header .divider { width: 1px; height: 24px; background: var(--border); }
+  .head-project { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 12px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); font: inherit; font-weight: 500;
+    color: var(--text); cursor: pointer; max-width: 360px; }
+  .head-project span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .head-project:hover { border-color: var(--border-strong); }
+  .head-chip { padding: 3px 8px; border-radius: 999px; background: var(--neutral-soft); color: var(--neutral-text); font-size: 12px; font-weight: 500; }
+  .head-link { display: inline-flex; align-items: center; min-height: 36px; padding: 0 6px; color: var(--accent);
+    font-weight: 500; text-decoration: none; }
+  .head-link:hover { text-decoration: underline; }
+
+  .layout { display: flex; flex: 1; min-height: 0; }   /* die Kopfzeile darf umbrechen */
+
+  /* Seitenleiste: Schritte in Gruppen, je eine Zeile; die MOMo-Schritte nur noch im Kopf des Schritts */
+  .sidebar {
+    width: 252px;
+    background: var(--surface2);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+  }
+  .step-group { display: flex; flex-direction: column; gap: 2px; }
+  .step-group-label { padding: 0 10px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted); }
+  .step-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text);
+    width: 100%;
+    text-align: left;
+    font: inherit;
+  }
+  .step-btn:hover { background: var(--neutral-soft); }
+  .step-btn.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .step-btn .num {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ring);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0; color: var(--text-muted);
+  }
+  .step-btn.active .num { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .step-btn.done .num { background: var(--success); border-color: var(--success); color: transparent; position: relative; }
+  .step-btn.done .num::after { content: ''; position: absolute; width: 5px; height: 9px; border: solid var(--on-accent);
+    border-width: 0 2px 2px 0; transform: rotate(45deg); top: 2px; left: 5px; }
+  .step-btn.done.active .num { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .step-btn.done.active .num::after { display: none; }
+  .sidebar-foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); }
+
+  /* Main */
+  .main { flex: 1; overflow-y: auto; padding: 32px; }
+  .panel { display: none; max-width: 900px; }
+  .panel.active { display: block; }
+
+  h2 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; }
+  .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; line-height: 1.55; }
+
+  /* ── MOMo ─────────────────────────────────────────────────────────────── */
+  .momo-step {
+    display: inline-block;
+    vertical-align: middle;
+    background: var(--neutral-soft);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 9px;
+    border-radius: 999px;
+    margin-left: 8px;
+  }
+  .momo-note {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: -14px 0 22px;
+  }
+
+  .momo-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .momo-item-head { display: flex; align-items: flex-start; gap: 10px; }
+  .fit-badge { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+  .fit-strong { background: var(--success-soft); color: var(--success); border: 1px solid var(--success-border); }
+  .fit-partial { background: var(--warning-soft); color: var(--warning); border: 1px solid var(--warning-border); }
+  .fit-manual { background: var(--accent-soft); color: var(--accent-light); border: 1px solid var(--accent-border); }
+  .momo-item.selectable.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .momo-item.selectable:not(.selected) { opacity: 0.6; }
+  .momo-item.selectable input[type="checkbox"] {
+    width: 18px; height: 18px; min-width: 18px; margin-top: 2px; accent-color: var(--accent); cursor: pointer;
+  }
+  .momo-item textarea, .momo-item input[type=text] {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 8px 10px;
+    font-size: 0.86rem; font-family: inherit; resize: vertical;
+  }
+  .momo-item .meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+  .momo-del {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 1.05rem; padding: 0 4px; line-height: 1; flex-shrink: 0;
+  }
+  .momo-del:hover { color: var(--error); }
+  .momo-idx {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: var(--on-accent); font-size: 0.7rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; margin-top: 4px;
+  }
+  .badge-hidden {
+    display: inline-block; background: var(--warning-soft); border: 1px solid var(--warning-border);
+    color: var(--warning); font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 20px; margin-left: 6px;
+  }
+  .badge-pattern {
+    display: inline-block; background: var(--success-soft); border: 1px solid var(--success-border);
+    color: var(--success); font-size: 0.68rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 20px; margin-left: 6px;
+  }
+  .pattern-detail {
+    margin-top: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 0.8rem; color: var(--text-muted);
+  }
+  .pattern-detail .elements { margin-top: 4px; font-family: var(--mono); font-size: 0.74rem; }
+  .pattern-detail a { color: var(--accent-light); text-decoration: none; margin-right: 12px; }
+  .pattern-detail a:hover { text-decoration: underline; }
+  .pattern-warn { margin-top: 8px; font-size: 0.8rem; color: var(--warning); }
+  .alt-chip {
+    display: inline-block; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    font-size: 0.72rem; padding: 1px 8px; border-radius: 20px; margin: 2px 4px 0 0; cursor: pointer;
+  }
+  .alt-chip:hover { border-color: var(--accent); }
+  .badge-scratch {
+    display: inline-block; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 0.68rem; padding: 2px 8px; border-radius: 20px; margin-left: 6px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input[type="password"] { letter-spacing: 2px; }
+  select option { background: var(--surface2); }
+  textarea { resize: vertical; min-height: 100px; }
+
+  button.btn {
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  button.btn:hover { filter: brightness(0.96); }
+  button.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-secondary, .btn.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); }
+  .btn-success { background: var(--success); color: var(--on-accent); }
+
+  /* File Drop */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .drop-zone .icon { font-size: 2rem; margin-bottom: 8px; }
+  .drop-zone p { color: var(--text-muted); font-size: 0.9rem; }
+  .drop-zone .file-name { color: var(--success); font-weight: 600; margin-top: 8px; }
+
+  /* Standards Cards */
+  .standards-grid { display: flex; flex-direction: column; gap: 12px; }
+  .standard-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .standard-card:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .standard-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .standard-card input[type="checkbox"] {
+    width: 18px; height: 18px;
+    min-width: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    margin-top: 2px;
+  }
+  .standard-info { flex: 1; }
+  .standard-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+  .standard-type {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--accent-border);
+    color: var(--accent-light);
+    margin-bottom: 6px;
+  }
+  .standard-relevance { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 4px; line-height: 1.5; }
+  .standard-hint { color: var(--code); font-size: 0.8rem; line-height: 1.5; }
+  .standard-url { font-size: 0.75rem; color: var(--accent-light); text-decoration: none; }
+  .standard-url:hover { text-decoration: underline; }
+  .select-all-row {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.85rem; color: var(--text-muted);
+  }
+
+  /* Tables */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    color: var(--text-muted);
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { border-bottom-color: var(--accent); color: var(--text); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th {
+    background: var(--surface2);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .tag-obj { background: var(--accent-border); color: var(--accent-light); }
+  .tag-data { background: var(--success-border); color: var(--success); }
+  .tag-class { background: var(--warning-border); color: var(--warning); }
+
+  /* OWL Code */
+  .code-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--code);
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  /* Alerts */
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .alert-info { background: var(--accent-soft); border: 1px solid var(--accent-border); }
+  .alert-success { background: var(--success-soft); border: 1px solid var(--success-border); color: var(--success); }
+  .alert-error { background: var(--error-soft); border: 1px solid var(--error-border); color: var(--error); }
+
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--accent-border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .iter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .iter-badge span { color: var(--accent-light); font-weight: 700; }
+
+  .summary-box {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .stat-row { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat {
+    flex: 1;
+    min-width: 100px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+  .stat .val { font-size: 1.75rem; font-weight: 700; color: var(--accent-light); }
+  .stat .lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* Graph */
+  #ontologyGraph {
+    width: 100%;
+    height: 520px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .graph-legend {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-top: 10px; font-size: 0.78rem; color: var(--text-muted);
+  }
+  .graph-legend span { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Schritt 9 (DECISIONS 126): Kopf mit den Aktionen, Reiter, Kennzahlen, "Needs attention", Laeufe je Frage */
+  .refine-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 16px; }
+  .refine-sub { color: var(--text-muted); flex: 1 1 360px; min-width: 0; }
+  .refine-sub strong { color: var(--text); }
+  .refine-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn-ghost, .btn.btn-ghost { background: transparent; color: var(--text); border: 1px solid transparent; }
+  .btn-ghost:hover { background: var(--neutral-soft); }
+  .subtabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .subtab { padding: 10px 12px; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none;
+    color: var(--text-muted); font: inherit; font-weight: 500; cursor: pointer; }
+  .subtab:hover { color: var(--text); }
+  .subtab.active { border-bottom-color: var(--accent); color: var(--text); font-weight: 600; }
+  .subtab .count { margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: var(--neutral-soft); color: var(--neutral-text); font-size: 12px; }
+  .subtab-panel { display: none; }
+  .subtab-panel.active { display: block; }
+  .eval-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--text-muted); font-size: 13px; }
+  .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .compare-table { width: 100%; border-collapse: collapse; margin: 10px 0 8px; font-size: 13px; }
+  .compare-table th, .compare-table td { text-align: right; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  .compare-table th:first-child, .compare-table td:first-child { text-align: left; }
+  .compare-table th { color: var(--text-muted); font-weight: 600; }
+  .score { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px; }
+  .score-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .score-title { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+  .score-value { font-size: 26px; font-weight: 600; line-height: 1.2; }
+  .score-value small { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+  .score-sub { font-size: 13px; color: var(--text-muted); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .pill.ok { background: var(--success-soft); color: var(--success); }
+  .pill.warn { background: var(--warning-soft); color: var(--warning); }
+  .pill.bad { background: var(--error-soft); color: var(--error); }
+  .pill.neutral { background: var(--neutral-soft); color: var(--neutral-text); }
+  .panel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 20px; }
+  .panel-card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 16px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .panel-card-head h3 { font-size: 16px; font-weight: 600; }
+  .att-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 20px; border-bottom: 1px solid var(--row-border); }
+  .att-row:last-child { border-bottom: none; }
+  .att-text { flex: 1 1 280px; min-width: 0; }
+  .att-title { font-weight: 600; }
+  .att-sub { font-size: 13px; color: var(--text-muted); }
+  .att-icon { width: 20px; height: 20px; flex-shrink: 0; }
+  .q-row { display: flex; align-items: flex-start; gap: 14px; padding: 10px 20px; border-bottom: 1px solid var(--row-border); }
+  .q-row:last-child { border-bottom: none; }
+  .q-num { width: 22px; flex-shrink: 0; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .q-text { flex: 1; min-width: 0; }
+  .q-why { margin-top: 4px; font-size: 13px; color: var(--text-muted); }
+  .q-runs { display: flex; gap: 6px; flex-shrink: 0; padding-top: 3px; }
+  .q-result { width: 120px; flex-shrink: 0; text-align: right; }
+  .run-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
+  .run-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .export-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+  .export-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 8px 14px;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: inherit; font-weight: 500;
+    color: var(--text); cursor: pointer; text-align: left; }
+  .export-item:hover { border-color: var(--border-strong); background: var(--surface2); }
+
+  /* Schritt 8: der Bericht der Generierung als Ablauf (DECISIONS 126) */
+  .gen-report { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+  .gen-report .pipeline { flex: 2 1 520px; min-width: 0; margin-bottom: 0; }
+  .gen-report > .panel-card:not(.pipeline) { flex: 1 1 240px; min-width: 0; margin-bottom: 0; }
+  .stage { display: flex; gap: 14px; padding: 12px 20px 0; }
+  .stage:last-child { padding-bottom: 14px; }
+  .stage-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .stage-line { flex: 1; width: 2px; margin-top: 4px; background: var(--border); min-height: 12px; }
+  .stage-body { flex: 1; min-width: 0; padding-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .stage-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+  .stage-title { font-weight: 600; }
+  .stage-line-text { font-size: 13px; color: var(--text-muted); }
+  .stage-line-text strong { color: var(--text); font-weight: 500; }
+  .stage-error { padding: 8px 10px; border-radius: 8px; background: var(--error-soft); color: var(--error-strong); }
+  .module-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin: 4px 0; }
+  .module-chip { padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); color: var(--text); font-weight: 500; }
+  .module-chip.failed { border-color: var(--error-border); background: var(--error-soft); }
+
+  /* Schritte 1-6 (DECISIONS 126): Felder, kurze Einfuehrung mit Details, eine Leiste je Schritt, Listenzeilen */
+  .card label { font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--text); font-weight: 600; }
+  .card .optional, .optional { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 16px; margin-bottom: 14px; }
+  .field-grid .field { margin-bottom: 0; }
+  .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+  .field-hint code { font-size: 11px; }
+  .key-row { display: flex; gap: 8px; }
+  .key-row input { flex: 1; }
+  .card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .howto { margin: -12px 0 20px; font-size: 13px; color: var(--text-muted); }
+  .howto > summary { cursor: pointer; color: var(--accent); font-weight: 500; width: max-content; }
+  .howto p { margin-top: 8px; line-height: 1.55; max-width: 760px; }
+  .step-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .momo-note { font-style: normal; }
+  .heading-count { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+  .start-choice { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .start-option { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--surface); text-align: left; font: inherit; color: var(--text); cursor: pointer; }
+  .start-option:hover { border-color: var(--border-strong); }
+  .start-option.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+  .start-title { font-weight: 600; }
+  .ctx-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .ctx-empty { padding: 12px 0; }
+  .list-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .list-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .list-card:empty { display: none; }
+  .list-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--row-border); }
+  .list-row:last-child { border-bottom: none; }
+  .list-num { width: 22px; flex-shrink: 0; padding-top: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .list-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .list-body textarea { min-height: 0; }
+  .list-meta { font-size: 12px; color: var(--text-muted); }
+  .list-empty { padding: 16px; color: var(--text-muted); font-size: 13px; }
+  .icon-btn { width: 36px; height: 36px; flex-shrink: 0; border: none; border-radius: 8px; background: none; color: var(--text-muted);
+    cursor: pointer; font-size: 15px; }
+  .icon-btn:hover { background: var(--neutral-soft); color: var(--error); }
+  .step-btn .step-meta { margin-left: auto; font-size: 12px; font-weight: 400; color: var(--text-muted); white-space: nowrap; }
+  .step-btn .step-meta.warn { color: var(--warning); font-weight: 500; }
+  .head-chip { border: none; font: inherit; font-size: 12px; cursor: default; }
+  button.head-chip { cursor: pointer; }
+  .head-chip.warn { background: var(--warning-soft); color: var(--warning); font-weight: 600; }
+  .lit-table-docs { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .lit-table-docs td { padding: 8px 10px; border-bottom: 1px solid var(--row-border); vertical-align: middle; }
+  .lit-table-docs tr:last-child td { border-bottom: none; }
+  .lit-type { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+
+  /* Schritt 7: Kernrelationen in Gruppen nach ihrer Domain (DECISIONS 126) */
+  .rel-group { border: 1px solid var(--border); border-radius: 10px; margin: 8px 0; background: var(--surface); }
+  .rel-group > summary { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 14px; cursor: pointer; list-style: none; }
+  .rel-group > summary::-webkit-details-marker { display: none; }
+  .rel-group > summary::before { content: ''; width: 7px; height: 7px; border: solid var(--text-muted); border-width: 0 1.6px 1.6px 0;
+    transform: rotate(-45deg); transition: transform 0.15s; flex-shrink: 0; }
+  .rel-group[open] > summary::before { transform: rotate(45deg); }
+  .rel-group .rel-title { font-weight: 600; }
+  .rel-group .rel-preview { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--text-muted); }
+  .rel-group .lit-table { margin: 0 !important; border-top: 1px solid var(--border); }
+
+  /* Reparaturwerkzeuge in Schritt 9: zugeklappt, mit dem Grund im Kopf (PLAN.md Phase 4) */
+  .repair-tools { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface);
+    padding: 10px 16px; margin-bottom: 16px; }
+  .repair-tools > summary { cursor: pointer; }
+  .repair-tools .repair-title { font-weight: 700; }
+  .repair-tool { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+
+  /* OOPS! Report */
+  .oops-banner {
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.875rem;
+    border: 1px solid;
+  }
+  .oops-banner.clean { background: var(--success-soft); border-color: var(--success-border); color: var(--success); }
+  .oops-banner.fixed { background: var(--warning-soft); border-color: var(--warning-border); color: var(--warning); }
+  .oops-banner.info  { background: var(--accent-soft); border-color: var(--accent-border); color: var(--accent-light); }
+  .oops-pitfall-list { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .oops-pitfall {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .oops-pitfall .pf-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .oops-pitfall .pf-code { font-weight: 700; color: var(--accent-light); font-size: 0.85rem; }
+  .oops-pitfall .pf-name { font-weight: 600; font-size: 0.875rem; }
+  .oops-pitfall .pf-imp {
+    margin-left: auto; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+  }
+  .pf-imp.critical { background: var(--error-border); color: var(--error); }
+  .pf-imp.important { background: var(--warning-border); color: var(--warning); }
+  .pf-imp.minor { background: var(--neutral-soft); color: var(--text-muted); }
+  .oops-pitfall .pf-desc { color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; }
+  .oops-pitfall .pf-affected { color: var(--code); font-size: 0.78rem; margin-top: 4px; }
+  .oops-toggle { background: none; border: none; color: var(--accent-light); font-size: 0.8rem; cursor: pointer; padding: 0; margin-top: 6px; }
+  .oops-toggle:hover { text-decoration: underline; }
+  .oops-banner.failed { background: var(--error-soft); border-color: var(--error-border); color: var(--error); }
+
+  /* Projektkontext */
+  .ctx-hint { font-size: 0.8rem; color: var(--text-muted); margin: 0 0 10px; }
+  .ctx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .ctx-field { display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 4px; }
+  .ctx-doc { font-family: var(--mono); font-size: 0.82rem; line-height: 1.5; }
+  .ctx-question { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
+  .ctx-question .q-head { display: flex; gap: 8px; align-items: flex-start; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; }
+  .ctx-question .q-section { font-size: 0.7rem; color: var(--accent-light); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .ctx-question label.q-opt { display: flex; gap: 8px; align-items: center; font-size: 0.85rem; text-transform: none;
+    letter-spacing: 0; color: var(--text); font-weight: 400; margin: 3px 0; cursor: pointer; }
+  .ctx-question label.q-opt input { width: auto; accent-color: var(--accent); }
+  .ctx-question .q-rec { font-size: 0.72rem; color: var(--success); }
+  .ctx-question input.q-other { margin-top: 4px; }
+  .def-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  .def-item > summary { cursor: pointer; font-size: 0.88rem; }
+  .def-item .def-body { margin-top: 8px; font-size: 0.85rem; }
+  .def-item label.q-opt { display: flex; gap: 8px; align-items: flex-start; font-size: 0.85rem; text-transform: none; font-weight: 400; margin: 4px 0; }
+  .def-item label.q-opt input { width: auto; margin-top: 3px; accent-color: var(--accent); }
+  .def-part { display: grid; grid-template-columns: minmax(140px, 220px) 1fr auto; gap: 8px; margin: 6px 0; }
+  .def-part textarea { min-height: 54px; }
+  .def-rec { border-left: 3px solid var(--success); padding: 4px 10px; margin: 8px 0; }
+  .def-state { font-size: 0.72rem; font-weight: 600; margin-left: 6px; }
+  .def-state.decided { color: var(--success); } .def-state.recommended { color: var(--accent-light); } .def-state.todo { color: var(--warning); }
+
+  /* Evaluation (Schritt 8) */
+  .eval-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin: 10px 0; }
+  .eval-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+  .eval-tile .v { font-size: 1.15rem; font-weight: 700; color: var(--text); }
+  .eval-tile .l { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+  .eval-tile.warn .v { color: var(--warning); }
+  .eval-tile.bad .v { color: var(--error); }
+  .eval-section { margin-top: 10px; font-size: 0.82rem; }
+  .eval-section h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-light); margin: 10px 0 4px; }
+
+  /* Literatur (Schritt 3) */
+  .lit-doc { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; background: var(--surface2); }
+  .lit-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px; font-size: 0.85rem; }
+  .lit-row { flex-wrap: wrap; row-gap: 4px; }
+  .lit-row .lit-name { flex: 1 1 220px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lit-row .lit-meta { color: var(--text-muted); font-size: 0.75rem; white-space: nowrap; }
+  .lit-row button { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 2px 6px; }
+  .lit-row button:hover { color: var(--text); }
+  .lit-card { border-top: 1px solid var(--border); padding: 10px 14px; font-size: 0.82rem; }
+  .lit-card h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-light); margin: 12px 0 6px; }
+  .lit-card h4:first-child { margin-top: 0; }
+  .lit-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .lit-table th, .lit-table td { text-align: left; vertical-align: top; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  .lit-table th { color: var(--text-muted); font-weight: 600; font-size: 0.72rem; }
+  .lit-quote { color: var(--text-muted); font-style: italic; }
+  .lit-ok { color: var(--success); font-style: normal; }
+  .lit-warn { color: var(--warning); font-style: normal; }
+  .lit-progress { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; margin: 8px 0; }
+  .lit-progress > div { height: 100%; background: var(--accent); transition: width 0.3s; }
+  .lit-pill { display: inline-block; font-size: 0.7rem; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--border); color: var(--text-muted); margin: 1px 3px 1px 0; }
+  .lit-conflict { background: var(--surface2); border: 1px solid var(--warning-border); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 0.84rem; }
+  .lit-theme { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; font-size: 0.84rem; }
+  .lit-sources { margin: 4px 0 0 0; padding-left: 16px; color: var(--text-muted); }
+  .lit-scroll { max-height: 520px; overflow: auto; }
+
+  /* Projekt-Aktionen im Header */
+  .project-actions { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .picker-backdrop { position: fixed; inset: 0; background: rgba(27, 28, 31, 0.35); display: flex; justify-content: center;
+                     align-items: flex-start; padding: 60px 16px; z-index: 1000; }
+  .picker { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: min(780px, 100%);
+            max-height: calc(100vh - 120px); overflow: auto; padding: 16px 20px; }
+  .picker-row { display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin-bottom: 8px;
+                border: 1px solid var(--border); border-radius: 8px; background: var(--surface2); }
+  .picker-row.current { border-color: var(--accent); }
+  .picker-row .picker-title { font-weight: 600; font-size: 0.9rem; }
+  .picker-row .picker-meta { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
+  .btn-sm { padding: 6px 12px; font-size: 0.8rem; min-height: 36px; }
+  .project-notice {
+    background: var(--accent-soft); border-bottom: 1px solid var(--accent-border);
+    color: var(--accent-light); font-size: 0.85rem; padding: 8px 24px; text-align: center;
+  }
+
+  /* CQ tests */
+  .pf-imp.passed { background: var(--success-border); color: var(--success); }
+  .pf-imp.failed { background: var(--error-border); color: var(--error); }
+  .pf-imp.not_answerable { background: var(--warning-border); color: var(--warning); }
+  .pf-imp.partial { background: var(--warning-border); color: var(--warning); }
+  .cq-pre {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin-top: 6px;
+    font-family: var(--mono); font-size: 0.76rem; color: var(--text); white-space: pre-wrap; word-break: break-word;
+  }
+
+  /* Diff View */
+  .diff-section { margin-bottom: 12px; }
+  .diff-section h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 6px; }
+  .diff-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 6px 10px; border-radius: 6px; font-size: 0.83rem;
+    margin-bottom: 4px; line-height: 1.4;
+  }
+  .diff-added   { background: var(--success-soft);  border-left: 3px solid var(--success); }
+  .diff-removed { background: var(--error-soft);  border-left: 3px solid var(--error); }
+  .diff-changed { background: var(--warning-soft); border-left: 3px solid var(--warning); }
+  .diff-badge {
+    font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 10px;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .diff-badge.add { background: var(--success-border);  color: var(--success); }
+  .diff-badge.rem { background: var(--error-border);  color: var(--error); }
+  .diff-badge.chg { background: var(--warning-border); color: var(--warning); }
+  .diff-empty { color: var(--text-muted); font-size: 0.83rem; font-style: italic; padding: 6px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.css" />
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg class="logo" width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-cover" d="M16 3h32a4 4 0 0 1 4 4v44H16a4 4 0 0 0-4 4V7a4 4 0 0 1 4-4z"/><path class="logo-pages" d="M52 51v7H16a3.5 3.5 0 0 1 0-7z"/><path class="logo-tree" d="M35 17L27 32M35 17l8 15"/><circle class="logo-node" cx="35" cy="17" r="4.6"/><circle class="logo-node" cx="27" cy="32" r="3.8"/><circle class="logo-node" cx="43" cy="32" r="3.8"/><path class="logo-ribbon" d="M40 55v9l3.5-2.5L47 64v-9z"/></svg>
+    <span>LITMO</span>
+  </div>
+  <span class="divider"></span>
+  <button class="head-project" onclick="openProjectPicker()" title="Open another saved project">
+    <span id="headProject">New project</span>
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+  </button>
+  <span class="head-chip" id="headIteration" style="display:none"></span>
+  <button class="head-chip" id="headModel" style="display:none" onclick="goTo(1)" title="Model and key (step 1)"></button>
+  <div class="project-actions">
+    <button class="btn btn-secondary btn-sm" onclick="newProject()" title="Start a new, empty project">New project</button>
+    <button class="btn btn-secondary btn-sm" onclick="document.getElementById('projectImportInput').click()" title="Open an exported project file">Import</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportProject()" title="Download the whole project as a file">Export project</button>
+    <input type="file" id="projectImportInput" accept=".json,application/json" style="display:none" onchange="importProject(this.files[0])" />
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Switch to the dark theme" title="Dark or light theme">
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M14.8 11.4A6.5 6.5 0 0 1 6.6 3.2a6.5 6.5 0 1 0 8.2 8.2z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    </button>
+    <a href="/" class="head-link">About MOMo</a>
+  </div>
+</header>
+<div id="projectNotice" class="project-notice" style="display:none"></div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar" aria-label="Steps">
+    <div class="step-group">
+      <div class="step-group-label">Prepare</div>
+      <button class="step-btn active" onclick="goTo(1)" id="nav1"><span class="num">1</span> Model and key</button>
+      <button class="step-btn" onclick="goTo(2)" id="nav2"><span class="num">2</span> Use case and data</button>
+      <button class="step-btn" onclick="goTo(8)" id="nav8"><span class="num">3</span> Literature</button>
+      <button class="step-btn" onclick="goTo(7)" id="nav7"><span class="num">4</span> Project context</button>
+    </div>
+    <div class="step-group">
+      <div class="step-group-label">Decide</div>
+      <button class="step-btn" onclick="goTo(3)" id="nav3"><span class="num">5</span> Competency questions</button>
+      <button class="step-btn" onclick="goTo(4)" id="nav4"><span class="num">6</span> Key notions and modules</button>
+      <button class="step-btn" onclick="goTo(5)" id="nav5"><span class="num">7</span> Design decisions</button>
+    </div>
+    <div class="step-group">
+      <div class="step-group-label">Build and check</div>
+      <button class="step-btn" onclick="goTo(6)" id="nav6"><span class="num">8</span> Generate</button>
+      <button class="step-btn" onclick="goTo(9)" id="nav9"><span class="num">9</span> Evaluate and refine</button>
+    </div>
+    <div class="sidebar-foot">Follows MOMo, the Modular Ontology Modeling method; each step names the MOMo steps it covers.</div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Panel 1: LLM Config -->
+    <div class="panel active" id="panel1">
+      <h2>Model and key</h2>
+      <p class="subtitle">The model that drafts, generates and tests. The key stays in this browser tab – it is never
+      stored or exported.</p>
+      <div id="keyNotice" class="alert alert-info" style="display:none"></div>
+
+      <div class="card">
+        <div class="field-grid">
+          <div class="field">
+            <label for="provider">Provider</label>
+            <select id="provider" onchange="updateModelOptions()">
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="openai">OpenAI (GPT)</option>
+              <option value="gemini">Google (Gemini)</option>
+              <option value="rwthgpt">RWTHgpt / KI:connect</option>
+              <option value="custom">Custom (OpenAI-compatible)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="model">Model</label>
+            <select id="model" style="display:block"></select>
+            <input type="text" id="modelCustom" placeholder="Enter model name" style="display:none" />
+            <p id="modelHint" class="field-hint" style="display:none">
+              Find the exact model name in the <a href="https://chat.kiconnect.nrw/app/api-docs/" target="_blank">KI:connect API Docs</a>.
+            </p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="apiKey">API key</label>
+          <div class="key-row">
+            <input type="password" id="apiKey" placeholder="sk-... or sk-ant-..." onchange="loadProviderModels()" autocomplete="off" />
+            <button type="button" class="btn btn-secondary btn-sm" id="keyToggle" onclick="toggleKeyVisible()" aria-label="Show the key">Show</button>
+          </div>
+        </div>
+        <div class="field" id="baseUrlCard" style="display:none">
+          <label for="baseUrl">API base URL</label>
+          <input type="text" id="baseUrl" placeholder="https://api.example.com/v1" />
+          <p id="baseUrlHint" class="field-hint"></p>
+        </div>
+        <div class="field" id="customProviderCard" style="display:none">
+          <label for="customProviderName">Provider name (display only)</label>
+          <input type="text" id="customProviderName" placeholder="e.g. Groq, Together AI, Ollama, Mistral …" />
+          <p class="field-hint">Any OpenAI-compatible service, for example Groq <code>https://api.groq.com/openai/v1</code>,
+            Together <code>https://api.together.xyz/v1</code>, Ollama <code>http://localhost:11434/v1</code>,
+            Mistral <code>https://api.mistral.ai/v1</code>.</p>
+        </div>
+      </div>
+
+      <div class="step-nav">
+        <span></span>
+        <button class="btn btn-primary" onclick="saveConfig()">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Panel 2: Upload -->
+    <div class="panel" id="panel2">
+      <h2>Use case and data <span class="momo-step">MOMo step 1</span></h2>
+      <p class="subtitle">What the ontology is for, loosely described, and the data it must represent. Responsible: the
+      whole team.</p>
+      <details class="howto"><summary>How this step works</summary>
+        <p>Describe the problem <em>deliberately loosely</em> – a paragraph is enough, and it need not be crisp. It may cover
+        a set of related use cases rather than one, and future extensions currently out of scope. Writing it this way keeps
+        the goal a <strong>modular, extensible, reusable</strong> ontology suitable for adjacent purposes, not a one-off.
+        Also name the data sources the ontology must represent or align against.</p></details>
+
+      <div class="start-choice" role="group" aria-label="How to start">
+        <button class="start-option active" id="startDescribeBtn" onclick="showStartMode('describe')">
+          <span class="start-title">Describe the domain</span>
+          <span class="lit-meta">The tool builds the ontology with you, step by step.</span></button>
+        <button class="start-option" id="startLoadBtn" onclick="showStartMode('load')">
+          <span class="start-title">Start from an existing ontology</span>
+          <span class="lit-meta">Load a file and go straight to evaluating and refining it.</span></button>
+      </div>
+
+      <div id="startDescribe">
+        <div class="card">
+          <div class="field">
+            <label for="domainDesc">Use case or problem</label>
+            <textarea id="domainDesc" rows="7" placeholder="Example: We want to build a recipe discovery website. Users should be able to find recipes by ingredient, dietary restriction and preparation time. Later we may want to extend this to meal planning and shopping lists..."></textarea>
+          </div>
+          <div class="field">
+            <label for="dataSources">Data sources</label>
+            <textarea id="dataSources" rows="3" placeholder="Which existing data sources must the ontology represent or align against? e.g. allrecipes.com, an internal product database, USDA nutrition tables..."></textarea>
+          </div>
+          <div class="field">
+            <label for="extraReqs">Special requirements <span class="optional">optional</span></label>
+            <textarea id="extraReqs" rows="3" placeholder="e.g.: Use English identifiers only. Pay special attention to class hierarchy..."></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <label>Data files <span class="optional">optional</span></label>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+               ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+            <p><strong>Drag files here or click to select</strong></p>
+            <p class="field-hint">CSV, XLSX, TXT, MD, PDF, TTL, JSON-LD, RDF/OWL – for data the ontology must represent.
+              Papers, existing ontologies and concept lists that should shape its vocabulary belong in step 3.</p>
+            <div id="fileList" style="display:none; margin-top:10px; text-align:left;"></div>
+          </div>
+          <input type="file" id="fileInput" style="display:none" multiple accept=".csv,.xlsx,.xls,.txt,.md,.pdf,.ttl,.turtle,.jsonld,.rdf,.owl" onchange="handleFiles(this.files)" />
+        </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(1)">← Back</button>
+        <button class="btn btn-primary" onclick="proceedToLiterature()">Continue → Literature</button>
+      </div>
+      </div>
+
+      <div id="startLoad" style="display:none">
+        <div class="card">
+          <label>Existing ontology</label>
+          <p class="field-hint" style="margin-bottom:10px;">TTL, RDF/XML, OWL or JSON-LD. Modules, sources, axioms and class
+            restrictions are read back; step 9 opens with the repair tools.</p>
+          <div class="drop-zone" id="loadOntoZone" style="padding:24px;" onclick="document.getElementById('loadOntoInput').click()"
+               ondragover="onDragOver3(event)" ondragleave="onDragLeave3(event)" ondrop="onDrop3(event)">
+            <p><strong>Drop the ontology file here or click</strong></p>
+            <div id="loadOntoName" style="display:none; color:var(--success); font-weight:600; margin-top:8px;"></div>
+          </div>
+          <input type="file" id="loadOntoInput" style="display:none"
+                 accept=".ttl,.turtle,.rdf,.owl,.xml,.jsonld"
+                 onchange="handleLoadOntology(this.files[0])" />
+          <div id="loadOntoStatus" style="margin-top:10px;"></div>
+        </div>
+        <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(1)">← Back</button>
+        <span></span>
+      </div>
+      </div>
+    </div>
+
+    <!-- Panel 8 (angezeigt als Schritt 3): Literatur — jedes Paper einzeln verdichtet, dann zusammengefuehrt -->
+    <div class="panel" id="panel8">
+      <h2>Literature <span class="momo-step">optional</span></h2>
+      <p class="subtitle">Papers, existing ontologies and concept tables become one concept inventory that the later steps
+      build on. Skip this step if you have no such sources.</p>
+      <details class="howto"><summary>How this step works</summary>
+        <p>Each paper is read on its own and condensed into a <strong>paper card</strong>: the concepts it defines (with
+        definition, page and a verbatim quote), the relations and taxonomies it proposes, candidate competency questions and
+        the vocabularies it uses. The cards are then merged into a <strong>concept inventory</strong>: which concepts several
+        papers share, where their definitions disagree, and which themes could become modules. Existing ontologies and
+        concept tables join the same inventory, so you see which concepts they already cover. Start with a pilot of 8–10
+        papers and check their cards before extracting the rest.</p></details>
+
+      <div class="card">
+        <label>Add sources</label>
+        <div class="drop-zone" id="litDropZone" onclick="document.getElementById('litFileInput').click()"
+             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="event.preventDefault(); this.classList.remove('drag-over'); uploadPapers(event.dataTransfer.files)">
+          <p><strong>Drag sources here or click to select</strong></p>
+          <p class="field-hint">Papers (PDF, TXT, Markdown) · existing ontologies (Turtle, RDF/XML, OWL, JSON-LD, N-Triples) ·
+            concept tables (CSV, XLSX). The same file is only taken once.</p>
+        </div>
+        <input type="file" id="litFileInput" style="display:none" multiple
+               accept=".pdf,.txt,.md,.markdown,.ttl,.turtle,.rdf,.owl,.xml,.jsonld,.nt,.csv,.xlsx,.xlsm"
+               onchange="uploadPapers(this.files)" />
+        <p class="field-hint" style="margin-top:8px;">Papers are condensed by the model. Existing ontologies are read directly;
+          for a concept table you confirm which columns hold term, definition, broader term, synonyms and URI.</p>
+        <div id="litUploadStatus" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <label style="margin:0;">Sources <span id="litCount" class="optional"></span></label>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-primary btn-sm" id="litExtractBtn" onclick="extractPapers()">Extract paper cards</button>
+            <button class="btn btn-secondary btn-sm" id="litStopBtn" style="display:none" onclick="stopExtraction()">Stop</button>
+          </div>
+        </div>
+        <div id="litProgress"></div>
+        <div id="litDocs"><p class="ctx-hint">No sources yet.</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <label style="margin:0;">Concept inventory</label>
+          <button class="btn btn-primary btn-sm" id="litInventoryBtn" onclick="buildInventory()">Build concept inventory</button>
+        </div>
+        <div id="litInventoryStatus"></div>
+        <div id="litInventory"><p class="ctx-hint">Built from the extracted paper cards: concepts grouped across papers,
+          conflicting definitions, and themes that could become modules.</p></div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(2)">← Back</button>
+        <button class="btn btn-primary" onclick="proceedToContext()">Continue → Project context</button>
+      </div>
+    </div>
+
+    <!-- Panel 7 (angezeigt als Schritt 4): Projektkontext -->
+    <div class="panel" id="panel7">
+      <h2>Project context <span class="momo-step">MOMo step 1</span></h2>
+      <p class="subtitle">What every later step should know: purpose, scope, glossary, rules, data and reuse. The tool
+      drafts it from your inputs; you confirm, correct and fill gaps. Responsible: the whole team.</p>
+
+      <div class="ctx-actions">
+        <button class="btn btn-primary" id="draftContextBtn" onclick="draftContext()">Draft project context</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('contextFileInput').click()"
+          title="Markdown, text or PDF - read in full, not as the short preview used for data files">Start from a context file</button>
+        <span id="contextSourceInfo" class="ctx-hint" style="margin:0;"></span>
+        <input type="file" id="contextFileInput" accept=".md,.markdown,.txt,.pdf" style="display:none"
+               onchange="uploadContextFile(this.files[0])" />
+      </div>
+      <div id="contextStatus"></div>
+
+      <div class="subtabs" role="tablist" aria-label="Project context">
+        <button class="subtab active" role="tab" id="ctab-doc" onclick="showContextTab('doc')">Context document <span class="count" id="ctabCount-doc" style="display:none"></span></button>
+        <button class="subtab" role="tab" id="ctab-questions" onclick="showContextTab('questions')">Open questions <span class="count" id="ctabCount-questions" style="display:none"></span></button>
+        <button class="subtab" role="tab" id="ctab-definitions" onclick="showContextTab('definitions')">Definitions <span class="count" id="ctabCount-definitions" style="display:none"></span></button>
+        <button class="subtab" role="tab" id="ctab-conventions" onclick="showContextTab('conventions')">Conventions</button>
+        <button class="subtab" role="tab" id="ctab-upper" onclick="showContextTab('upper')">Upper layer</button>
+      </div>
+
+      <div class="subtab-panel active" id="context-doc">
+      <div class="card">
+        <label>Context document <span id="contextConfirmCount" class="optional" style="color:var(--warning);"></span></label>
+        <p class="ctx-hint">Markdown, editable. Items marked <code>[confirm]</code> were inferred by the model – check them
+        and delete the marker once they are right. Changes are saved automatically.</p>
+        <textarea id="contextMarkdown" rows="22" class="ctx-doc" oninput="onContextEdited()"
+          placeholder="Use Draft project context, or write the document yourself."></textarea>
+      </div>
+      </div>
+
+      <div class="subtab-panel" id="context-questions">
+      <p class="ctx-hint ctx-empty" id="contextQuestionsEmpty">No open questions – the draft leaves nothing open, or there is no draft yet.</p>
+      <div class="card" id="contextQuestionsCard" style="display:none">
+        <label>Open questions <span id="contextQuestionCount" class="optional"></span></label>
+        <p class="ctx-hint">Only where your inputs leave something open. Pick an option or write your own answer;
+        leave a question empty if you don't know yet.</p>
+        <div id="contextQuestions"></div>
+        <button class="btn btn-primary" onclick="answerContextQuestions()">Apply answers</button>
+      </div>
+      </div>
+
+      <div class="subtab-panel" id="context-definitions">
+      <p class="ctx-hint ctx-empty" id="definitionsEmpty">No conflicting definitions – the concept inventory (step 3) finds them.</p>
+      <div class="card" id="definitionsCard" style="display:none">
+        <label>Conflicting definitions <span id="definitionsCount" class="optional"></span></label>
+        <p class="ctx-hint">The sources define these concepts in different ways. Decide each one before generating: take
+        one of the positions, write your own definition, split the concept into separate classes (for example an artifact
+        and the process that produces it), or leave it open – the model then decides during generation. Decided
+        definitions go to every later step, and the generation uses them word for word.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <button class="btn btn-secondary btn-sm" id="recommendDefsBtn" onclick="recommendDefinitions()"
+            title="The model recommends a decision with a reason for each undecided conflict; you accept, change or reject it">Recommend decisions</button>
+          <button class="btn btn-secondary btn-sm" id="acceptDefsBtn" onclick="acceptDefinitions(null)" style="display:none"></button>
+          <select id="definitionsFilter" onchange="renderDefinitions()" style="width:auto;">
+            <option value="todo">Undecided</option><option value="decided">Decided</option><option value="all">All</option>
+          </select>
+        </div>
+        <div id="definitionsStatus"></div>
+        <div id="definitionsList"></div>
+      </div>
+      </div>
+
+      <div class="subtab-panel" id="context-conventions">
+      <div class="card">
+        <label>Conventions</label>
+        <div class="ctx-grid">
+          <div><span class="ctx-field">Ontology namespace</span>
+            <input type="text" id="convNamespace" placeholder="e.g. https://w3id.org/myproject/onto#" oninput="onConventionsEdited()" /></div>
+          <div><span class="ctx-field">Prefix</span>
+            <input type="text" id="convPrefix" placeholder="e.g. rec" oninput="onConventionsEdited()" /></div>
+          <div><span class="ctx-field">Label languages (first = language of descriptions)</span>
+            <input type="text" id="convLabelLanguages" placeholder="e.g. en, de" oninput="onConventionsEdited()" /></div>
+          <div><span class="ctx-field">License</span>
+            <input type="text" id="convLicense" list="licenseOptions" placeholder="license URI – empty: model proposes one" oninput="onConventionsEdited()" />
+            <datalist id="licenseOptions">
+              <option value="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</option>
+              <option value="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</option>
+              <option value="https://creativecommons.org/publicdomain/zero/1.0/">CC0 1.0</option>
+            </datalist></div>
+          <div><span class="ctx-field">OWL profile</span>
+            <select id="convOwlProfile" onchange="onConventionsEdited()">
+              <option>OWL 2 DL</option><option>OWL 2 EL</option><option>OWL 2 QL</option><option>OWL 2 RL</option>
+            </select></div>
+        </div>
+        <p class="ctx-hint" style="margin-top:8px;">Namespace, prefix and license are applied to the generated file
+        exactly as entered. Empty fields are left to the model. The prefix cannot be one a reused vocabulary uses.</p>
+        <div id="convError" class="ctx-hint" style="color:var(--error);"></div>
+      </div>
+      </div>
+
+      <div class="subtab-panel" id="context-upper">
+      <div class="card">
+        <label>Upper layer <span id="upperLayerState" class="optional"></span></label>
+        <p class="ctx-hint">A few classes that group the root classes of all modules by the kind of thing they are. The
+        generation plans every top class below one of them, and core relations may use them as domain or range; the ones
+        that end up empty are removed again. Classes marked disjoint cannot share instances, so the reasoner can catch a
+        class placed under two of them. Keep the default unless the domain needs other categories.</p>
+        <label class="ctx-hint" style="display:flex; align-items:center; gap:6px; margin:6px 0; font-weight:400;">
+          <input type="checkbox" id="useUpperLayer" checked onchange="saveUseUpperLayer(this.checked)" style="width:auto;" />
+          Use the upper layer in the generation (recommended; small ontologies may do without)</label>
+        <div id="upperLayerRows"></div>
+        <div id="upperLayerError" class="ctx-hint" style="color:var(--error);"></div>
+        <div style="display:flex; gap:10px; margin-top:8px;">
+          <button class="btn btn-secondary btn-sm" onclick="addUpperClass()">Add upper class</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetUpperLayer()">Reset to default</button>
+        </div>
+      </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(8)">← Back</button>
+        <button class="btn btn-primary" onclick="proceedToCQs()">Continue → Competency questions</button>
+      </div>
+    </div>
+
+    <!-- Panel 3: Competency Questions (MOMo Step 2) -->
+    <div class="panel" id="panel3">
+      <h2>Competency questions <span id="cqCount" class="heading-count"></span> <span class="momo-step">MOMo step 2</span></h2>
+      <p class="subtitle">Questions in natural language the finished knowledge graph should answer. After generation, each
+      becomes a SPARQL test. Aim for about ten that probe different aspects. Responsible: the whole team.</p>
+      <details class="howto"><summary>How this step works</summary>
+        <p>Competency questions refine the use case and check whether the data sources are adequate. Collect them from
+        <em>potential future users</em> too, not only from the modelling team. Suggestions are limited to 10 sufficiently
+        different questions; variations of one question add little.</p></details>
+
+      <div class="list-actions">
+        <button class="btn btn-secondary" onclick="addCQ()">Add question</button>
+        <button class="btn btn-secondary" onclick="suggestCQs()" title="Proposes questions from the use case, the context and the literature">Suggest questions <span class="optional">· calls the model</span></button>
+      </div>
+      <div id="cqStatus"></div>
+      <div class="list-card" id="cqList"></div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(7)">← Back</button>
+        <button class="btn btn-primary" onclick="proceedToNotions()">Continue → Key notions</button>
+      </div>
+    </div>
+
+    <!-- Panel 4: Key Notions & Modules (MOMo Step 3) -->
+    <div class="panel" id="panel4">
+      <h2>Key notions and modules <span id="notionCount" class="heading-count"></span> <span class="momo-step">MOMo step 3</span></h2>
+      <p class="subtitle">The few central concepts – typically 3 to 6 – that each become a module; the module's other
+      classes and properties are modelled around them. Responsible: the whole team.</p>
+      <details class="howto"><summary>How this step works</summary>
+        <p>A key notion is the <strong>origin point of a whole part of the ontology</strong>. Not every recurring noun is
+        one: attributes, values, parts and participants belong <em>inside</em> a notion's module. A good test: would the team
+        model it as its own module, with its own schema diagram? Watch for <em>hidden concepts</em>: "enslavement" is a
+        momentary event, but <em>being enslaved</em> is a state with a duration – likely the real key notion. A forgotten
+        notion can be added later.</p></details>
+
+      <div id="notionWarn" class="alert alert-info" style="display:none; background:var(--warning-soft); border-color:var(--warning-border); color:var(--warning);"></div>
+      <div class="list-card" id="notionList"></div>
+      <div class="list-actions" style="margin-top:12px;">
+        <button class="btn btn-secondary" onclick="addNotion()">Add key notion</button>
+      </div>
+
+      <details class="card" id="notionSuggestBox" style="padding:14px 18px;">
+        <summary style="cursor:pointer; font-weight:600;">Optional: suggestions for missing notions</summary>
+        <p class="ctx-hint" style="margin:10px 0 12px;">The tool reads your use case and competency questions and proposes
+        only notions that are <em>missing</em> from your list. Nothing is added until you accept it.</p>
+        <button class="btn btn-secondary" onclick="suggestNotions()">Suggest missing key notions <span class="optional">· calls the model</span></button>
+        <div id="notionStatus" style="margin-top:10px;"></div>
+        <div id="notionSuggestions"></div>
+      </details>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(3)">← Back</button>
+        <button class="btn btn-primary" onclick="proceedToPatterns()">Continue → Design decisions</button>
+      </div>
+    </div>
+
+    <!-- Panel 5: Patterns & Standards (MOMo Step 4) -->
+    <div class="panel" id="panel5">
+      <h2>Design decisions <span class="momo-step">MOMo step 4</span></h2>
+      <p class="subtitle">What the generation builds on: a design pattern per module, a small set of general relations,
+      and the vocabularies to reuse. Responsible: ontology engineers.</p>
+      <div class="subtabs" role="tablist" aria-label="Design decisions">
+        <button class="subtab active" role="tab" id="dtab-patterns" onclick="showDesignTab('patterns')">Patterns</button>
+        <button class="subtab" role="tab" id="dtab-core" onclick="showDesignTab('core')">Core relations</button>
+        <button class="subtab" role="tab" id="dtab-vocab" onclick="showDesignTab('vocab')">Vocabularies and prefixes</button>
+      </div>
+
+      <div class="subtab-panel active" id="design-patterns">
+      <p class="lit-meta" style="margin-bottom:12px;">For each key notion, an existing ontology design pattern close or
+      adaptable enough to serve as a <em>template</em> for its module. A notion may have several reasonable choices — a
+      <em>Recipe</em> could be a Document, a Plan or a Process; the use case and questions decide. Without a fitting
+      pattern the module is built from scratch.</p>
+      <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="suggestPatterns()">Suggest design patterns</button>
+      </div>
+      <p id="patternSource" class="momo-note" style="margin-top:-6px;"></p>
+      <div id="patternStatus"></div>
+      <datalist id="patternOptions"></datalist>
+      <div class="card">
+        <div class="select-all-row" id="patternSelectRow" style="display:none">
+          <input type="checkbox" id="selectAllPatterns" onchange="toggleAllPatterns(this.checked)" style="width:16px;height:16px;accent-color:var(--accent);" />
+          <label for="selectAllPatterns" style="cursor:pointer; text-transform:none; font-size:0.85rem; letter-spacing:0; color:var(--text-muted);">Select all / deselect all</label>
+          <span id="patternSelectedCount" style="margin-left:auto; color:var(--accent-light); font-weight:600;"></span>
+        </div>
+        <div id="patternList"></div>
+        <p style="font-size:0.78rem; color:var(--text-muted); margin-top:6px;">
+          Only selected patterns are passed to the generator; deselected notions are modeled from scratch.
+        </p>
+      </div>
+
+      </div>
+
+      <div class="subtab-panel" id="design-core">
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">A small vocabulary of general relations
+      that every module uses, instead of each module inventing one narrow property per pair of classes. It is proposed
+      from your competency questions, the key notions and the relations the literature states; the generation uses it
+      once you approve it. Optional — small ontologies may do without.</p>
+      <div id="coreVocab" class="card"></div>
+      </div>
+
+      <div class="subtab-panel" id="design-vocab">
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">Select existing vocabularies to align against during generation.</p>
+      <div id="standardsStatus"></div>
+      <div id="standardsContent" style="display:none">
+        <div class="select-all-row">
+          <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)" style="width:16px;height:16px;accent-color:var(--accent);" />
+          <label for="selectAll" style="cursor:pointer; text-transform:none; font-size:0.85rem; letter-spacing:0; color:var(--text-muted);">Select all / deselect all</label>
+          <span id="selectedCount" style="margin-left:auto; color:var(--accent-light); font-weight:600;"></span>
+        </div>
+        <div class="standards-grid" id="standardsGrid"></div>
+      </div>
+
+      <!-- Custom Prefixes: hier bei den Vokabularen, nicht mehr in Schritt 8 (PLAN.md Phase 3c) -->
+      <div class="card" style="margin-top:16px;">
+        <label>Additional Prefixes</label>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">For terms of vocabularies that are not loaded above - the generation and the Turtle editor may then use them.</p>
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Enter a prefix → URI is resolved automatically via prefix.cc.</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="customPrefixInput" type="text" placeholder="e.g. odrl" style="width:160px; padding:8px 12px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:0.875rem;" onkeydown="if(event.key==='Enter') addCustomPrefix()" />
+          <button class="btn btn-secondary" onclick="addCustomPrefix()" style="padding:8px 14px;">+ Add</button>
+          <span id="prefixLookupStatus" style="font-size:0.8rem; color:var(--text-muted);"></span>
+        </div>
+        <div id="customPrefixTags" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+      </div>
+      </div>
+
+      <div class="step-nav">
+        <button class="btn btn-secondary" onclick="goTo(4)">← Back</button>
+        <span style="display:flex; gap:12px;">
+          <button class="btn btn-secondary" id="reloadStandardsBtn" onclick="loadStandards()" style="display:none">Reload standards</button>
+          <button class="btn btn-primary" onclick="goTo(6)">Continue → Generate</button>
+        </span>
+      </div>
+    </div>
+
+    <!-- Panel 6: Generate (MOMo Steps 5-7) -->
+    <div class="panel" id="panel6">
+      <h2>Generate <span class="momo-step">MOMo steps 5–7</span></h2>
+      <p class="subtitle">The intensive, synchronous heart of the process. Key notions are modeled one at a time as modules,
+      each with a schema diagram and documentation pairing the diagram with its formal axioms (MOMo 5–6); the module diagrams
+      are then composed into a single ontology-wide diagram whose overriding priority is <em>understandability</em> (MOMo 7).
+      Evaluation, refinement and the OWL file follow in step 9.</p>
+      <p class="momo-note">👥 Responsible: entire team, led by ontology engineers</p>
+      <div id="momoReadiness"></div>
+
+      <div id="genStatus"></div>
+      <div id="usageBox" style="display:none"></div>
+
+      <div id="ontologyView" style="display:none">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
+          <div class="iter-badge" style="margin-bottom:0;">
+            Iteration <span id="iterNum">1</span>
+          </div>
+          <div id="validationBadge" style="display:none;"></div>
+        </div>
+
+        <div class="stat-row" id="statRow"></div>
+
+        <div class="summary-box" id="summaryBox"></div>
+
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab(event,'classes')">Classes</button>
+          <button class="tab" onclick="switchTab(event,'properties')">Properties</button>
+          <button class="tab" onclick="switchTab(event,'individuals')">Individuals</button>
+          <button class="tab" onclick="switchTab(event,'graph')">Graph</button>
+          <button class="tab" onclick="switchTab(event,'owl')">OWL / Turtle</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-classes">
+          <div class="card" style="padding:0; overflow:hidden;">
+            <table id="classTable">
+              <thead><tr><th>Name</th><th>Label</th><th>Parent Class</th><th>Description</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-properties">
+          <div class="card" style="padding:0; overflow:hidden;">
+            <table id="propTable">
+              <thead><tr><th>Name</th><th>Type</th><th>Domain</th><th>Range</th><th>Description</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-individuals">
+          <div class="card" style="padding:0; overflow:hidden;">
+            <table id="indTable">
+              <thead><tr><th>Name</th><th>Class</th><th>Label</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-graph">
+          <div id="ontologyGraph"></div>
+          <div class="graph-legend">
+            <span><span class="legend-dot" style="background:var(--accent)"></span> Root class</span>
+            <span><span class="legend-dot" style="background:var(--accent-soft); border:1.5px solid var(--accent)"></span> Subclass</span>
+            <span><span class="legend-dot" style="background:var(--success)"></span> Individual</span>
+            <span>─── ObjectProperty &nbsp; ··· SubClassOf</span>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:8px;">Nodes draggable · Scroll to zoom · Double-click to pin</p>
+        </div>
+
+        <div class="tab-panel" id="tab-owl">
+          <div class="card">
+            <div class="code-block" id="owlCode"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="generateBtnWrap">
+        <button class="btn btn-primary" id="generateBtn" onclick="generateOntology()">🚀 Generate Ontology</button>
+      </div>
+      <div id="toEvaluate" style="display:none; margin-top:16px;">
+        <button class="btn btn-primary" onclick="goTo(9)">Continue → Evaluate &amp; Refine</button>
+        <span class="lit-meta" style="margin-left:8px;">The competency questions are being tested; their results, the
+          evaluation, feedback and the export are in step 9.</span>
+      </div>
+    </div>
+
+    <!-- Panel 9: Evaluate & Refine (MOMo Steps 8-10) - PLAN.md phase 4 -->
+    <div class="panel" id="panel9">
+      <h2>Evaluate and refine <span class="momo-step">MOMo steps 8–10</span></h2>
+      <p class="subtitle">Test the ontology against the competency questions and the literature, improve it with the repair
+      tools or feedback, and export it. The OWL file is deliberately the last step (MOMo 10).</p>
+      <div id="refineEmpty" class="alert alert-info"><span>There is no ontology yet: generate one in step 8,
+        or load an existing ontology in step 2.</span></div>
+      <div id="refineView" style="display:none">
+        <div class="refine-head">
+          <div id="refineSummary" class="refine-sub"></div>
+          <div class="refine-actions">
+            <button class="btn btn-primary" onclick="runEvaluation()">Evaluate</button>
+            <button class="btn btn-secondary" onclick="evaluate3x()" title="A single test varies by up to 2 of 10 questions; three runs show whether a change is real">Evaluate 3×</button>
+            <button class="btn btn-ghost" id="evalDownloadBtn" onclick="downloadEvaluation()" style="display:none">Report (JSON)</button>
+          </div>
+        </div>
+        <div class="subtabs" role="tablist" aria-label="Evaluate and refine">
+          <button class="subtab active" role="tab" id="tab-overview" onclick="showRefineTab('overview')">Overview</button>
+          <button class="subtab" role="tab" id="tab-questions" onclick="showRefineTab('questions')">Questions</button>
+          <button class="subtab" role="tab" id="tab-repair" onclick="showRefineTab('repair')">Repair tools <span id="repairCount" class="count" style="display:none"></span></button>
+          <button class="subtab" role="tab" id="tab-edit" onclick="showRefineTab('edit')">Edit</button>
+          <button class="subtab" role="tab" id="tab-export" onclick="showRefineTab('export')">Export</button>
+        </div>
+
+        <div class="subtab-panel active" id="refine-overview">
+          <div id="evalReport" style="display:none"></div>
+          <div id="attention"></div>
+          <div id="oopsReport" style="display:none"></div>
+        </div>
+
+        <div class="subtab-panel" id="refine-questions">
+          <div id="evalQuestions"></div>
+          <div id="cqReport" style="display:none"></div>
+        </div>
+
+        <!-- Reparaturwerkzeuge: ein eigener Reiter; die Uebersicht nennt, welche die Evaluation verlangt (DECISIONS 126) -->
+        <div class="subtab-panel" id="refine-repair">
+          <div id="repairTools">
+            <div id="repairReason" class="lit-meta" style="margin-bottom:10px;"></div>
+            <div id="repairBody"></div>
+          </div>
+          <div id="gapRun"></div>
+          <div id="propVocab"></div>
+        </div>
+
+        <div class="subtab-panel" id="refine-export">
+          <div class="export-list">
+            <button class="export-item" onclick="downloadTurtle()"><span>Ontology</span><span class="lit-meta">Turtle (.ttl)</span></button>
+            <button class="export-item" onclick="downloadDocumentation('html')" title="One chapter per module: description, diagram, classes with definitions and sources - for the expert review"><span>Documentation</span><span class="lit-meta">HTML</span></button>
+            <button class="export-item" onclick="downloadDocumentation('md')"><span>Documentation</span><span class="lit-meta">Markdown</span></button>
+            <button class="export-item" onclick="copyTurtle()"><span>Copy the Turtle</span><span class="lit-meta">to the clipboard</span></button>
+            <button class="export-item" onclick="copyAndOpenEditor()"><span>Open in a Turtle web editor</span><span class="lit-meta">copies the Turtle first</span></button>
+          </div>
+          <p class="lit-meta" style="margin-top:12px;">SHACL shapes are made in the Edit tab, from the constraints you choose.</p>
+        </div>
+
+        <div class="subtab-panel" id="refine-edit">
+        <div id="diffView" style="display:none; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <span style="font-weight:600;">Changes compared to the previous version</span>
+            <button class="oops-toggle" onclick="toggleDiff()">▼ hide</button>
+          </div>
+          <div id="diffContent"></div>
+        </div>
+        <!-- ── Feedback & Iteration ─────────────────────────────────────── -->
+        <div>
+          <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:4px;">Feedback</h3>
+          <p class="subtitle" style="margin-bottom:16px;">Describe what should be improved. The LLM will revise the ontology accordingly.</p>
+
+          <!-- Attach files -->
+          <div class="card">
+            <label>Attach Files (optional)</label>
+            <div class="drop-zone" id="fbDropZone" style="padding:20px;" onclick="document.getElementById('fbFileInput').click()"
+                 ondragover="onDragOver2(event)" ondragleave="onDragLeave2(event)" ondrop="onDrop2(event)">
+              <div class="icon" style="font-size:1.4rem;">📎</div>
+              <p style="font-size:0.85rem;">Additional files for this feedback step</p>
+              <div id="fbFileList" style="display:none; margin-top:8px; text-align:left;"></div>
+            </div>
+            <input type="file" id="fbFileInput" style="display:none" multiple
+                   accept=".csv,.xlsx,.xls,.txt,.md,.pdf,.ttl,.turtle,.jsonld,.rdf,.owl"
+                   onchange="handleFeedbackFiles(this.files)" />
+          </div>
+
+          <div class="card">
+            <label>Your Feedback</label>
+            <textarea id="feedbackText" rows="6" placeholder="Example: The class 'Patient' is missing. Please add a property 'hasDiagnosis' between Patient and Diagnosis..."></textarea>
+          </div>
+
+          <div id="feedbackStatus"></div>
+
+          <div style="display:flex; gap:12px;">
+            <button class="btn btn-primary" id="feedbackBtn" onclick="submitFeedback()">✨ Refine</button>
+          </div>
+
+          <!-- Edit Turtle directly -->
+          <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+              <h3 style="font-size:1rem;">Edit Turtle Directly</h3>
+              <button id="turtleEditorToggleBtn" class="oops-toggle" onclick="toggleTurtleEditor()">▶ Open editor</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">
+              Edit the ontology directly in Turtle format. Changes are validated and applied: the ontology is read
+              back from the Turtle, with its modules, sources, axioms and external terms; the links to the concept
+              inventory are kept for classes that keep their name. Afterwards the editor shows the saved ontology.
+            </p>
+            <div id="turtleEditorWrap" style="display:none;">
+              <textarea id="turtleEditor" spellcheck="false" style="
+                width:100%; min-height:380px; resize:vertical;
+                font-family:'Consolas','Fira Code',monospace; font-size:0.82rem;
+                background:var(--surface2); color:var(--code);
+                border:1px solid var(--border); border-radius:var(--radius);
+                padding:14px; line-height:1.6; outline:none;
+                transition: border-color 0.15s;
+              " oninput="onTurtleEditorInput()" placeholder="Loading Turtle…"></textarea>
+              <div id="turtleEditorHint" style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; min-height:18px;"></div>
+              <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="resetTurtleEditor()">↺ Reset</button>
+                <button class="btn btn-primary" id="saveTurtleBtn" onclick="saveTurtle()">💾 Save & Apply</button>
+              </div>
+              <div id="turtleEditorStatus" style="margin-top:10px;"></div>
+            </div>
+          </div>
+
+          <!-- SHACL Constraints -->
+          <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+              <h3 style="font-size:1rem;">SHACL Constraints</h3>
+              <button id="shaclEditorToggleBtn" class="oops-toggle" onclick="toggleShaclEditor()">▶ Open editor</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:12px;">
+              Define MinCount, MaxCount and Datatype for properties — generates a SHACL file and optionally adjusts the ontology.
+            </p>
+            <div id="shaclEditorWrap" style="display:none;">
+              <div id="shaclTableWrap" class="card" style="padding:0; overflow:hidden; margin-bottom:12px;">
+                <table id="shaclTable">
+                  <thead>
+                    <tr>
+                      <th style="width:28px;"><input type="checkbox" id="shaclSelectAll" onchange="shaclToggleAll(this)" style="accent-color:var(--accent);"></th>
+                      <th>Property</th>
+                      <th>Target Class</th>
+                      <th style="width:90px;">MinCount</th>
+                      <th style="width:90px;">MaxCount</th>
+                      <th style="width:160px;">Datatype</th>
+                      <th style="width:130px;">NodeKind</th>
+                    </tr>
+                  </thead>
+                  <tbody id="shaclTableBody"></tbody>
+                </table>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; color:var(--text-muted); cursor:pointer;">
+                  <input type="checkbox" id="shaclAdjustOnto" style="accent-color:var(--accent);">
+                  Also adjust ontology (LLM)
+                </label>
+                <button class="btn btn-primary" onclick="generateShacl()">⚙ Generate SHACL</button>
+              </div>
+              <div id="shaclStatus"></div>
+              <div id="shaclResult" style="display:none;">
+                <div class="card">
+                  <label>SHACL / Turtle</label>
+                  <div class="code-block" id="shaclCode" style="max-height:300px;"></div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                  <button class="btn btn-success" onclick="downloadShacl()">⬇ Download SHACL (.ttl)</button>
+                  <button class="btn btn-secondary" onclick="copyShacl()">📋 Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/project.js"></script>
+<script src="js/step1-llm.js"></script>
+<script src="js/step2-usecase.js"></script>
+<script src="js/step3-literature.js"></script>
+<script src="js/step4-context.js"></script>
+<script src="js/step5-cqs.js"></script>
+<script src="js/step6-notions.js"></script>
+<script src="js/step7-design.js"></script>
+<script src="js/step8-generate.js"></script>
+<script src="js/step9-refine.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

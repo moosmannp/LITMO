@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LITMO — literature-driven modular ontologies</title>
+<link rel="icon" type="image/svg+xml" href="/assets/litmo-icon.svg" />
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242736;
+    --border: #2e3148;
+    --accent: #6366f1;
+    --accent-light: #818cf8;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.65; -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent-light); }
+
+  /* ── Nav ─────────────────────────────────────────────────────────────── */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(26,29,39,0.92); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px; display: flex; align-items: center; gap: 12px;
+  }
+  .nav .logo { display: block; flex-shrink: 0; }
+  .logo .logo-cover { fill: var(--accent-light); }
+  .logo .logo-pages { fill: var(--bg); stroke: var(--accent-light); stroke-width: 2.6; stroke-linejoin: round; }
+  .logo .logo-tree { fill: none; stroke: var(--bg); stroke-width: 2.6; stroke-linecap: round; }
+  .logo .logo-node { fill: var(--bg); }
+  .logo .logo-ribbon { fill: var(--text); }
+  .nav h1 { font-size: 1.05rem; font-weight: 700; }
+  .nav .badge {
+    background: var(--accent); color: #fff; font-size: 0.68rem;
+    padding: 2px 9px; border-radius: 20px; font-weight: 600;
+  }
+  .nav-links { margin-left: auto; display: flex; gap: 22px; align-items: center; }
+  .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.88rem; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--accent); color: #fff !important; text-decoration: none;
+    padding: 8px 16px; border-radius: 8px; font-size: 0.86rem; font-weight: 600;
+  }
+  .nav-cta:hover { background: var(--accent-light); }
+
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── Hero ────────────────────────────────────────────────────────────── */
+  .hero { padding: 88px 0 72px; text-align: center; }
+  .hero .eyebrow {
+    display: inline-block; background: rgba(99,102,241,0.14);
+    border: 1px solid rgba(99,102,241,0.35); color: var(--accent-light);
+    font-size: 0.74rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 5px 13px; border-radius: 20px; margin-bottom: 22px;
+  }
+  .hero h2 {
+    font-size: 2.7rem; line-height: 1.15; font-weight: 800; margin-bottom: 20px;
+    background: linear-gradient(135deg, #e2e8f0 30%, #818cf8);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p { color: var(--text-muted); font-size: 1.08rem; max-width: 660px; margin: 0 auto 32px; }
+  .hero-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 26px; border-radius: 9px;
+    font-size: 0.95rem; font-weight: 600; text-decoration: none; border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-light); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* ── Sections ────────────────────────────────────────────────────────── */
+  section { padding: 60px 0; border-top: 1px solid var(--border); }
+  section h3 { font-size: 1.6rem; font-weight: 700; margin-bottom: 12px; }
+  section .lede { color: var(--text-muted); margin-bottom: 34px; max-width: 720px; }
+  h4 { font-size: 1.05rem; font-weight: 700; margin: 30px 0 10px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .card .ico { font-size: 1.5rem; margin-bottom: 10px; }
+  .card h5 { font-size: 0.98rem; font-weight: 700; margin-bottom: 6px; }
+  .card p { color: var(--text-muted); font-size: 0.87rem; }
+
+  /* ── Principles ──────────────────────────────────────────────────────── */
+  .principle {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: var(--radius);
+    padding: 16px 20px; margin-bottom: 12px;
+  }
+  .principle strong { color: var(--accent-light); }
+  .principle p { color: var(--text-muted); font-size: 0.9rem; margin-top: 3px; }
+
+  /* ── Steps ───────────────────────────────────────────────────────────── */
+  .steps { position: relative; padding-left: 8px; }
+  .step { display: flex; gap: 18px; padding-bottom: 26px; position: relative; }
+  .step:not(:last-child)::before {
+    content: ''; position: absolute; left: 17px; top: 40px; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .step-num {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 0.92rem;
+    display: flex; align-items: center; justify-content: center; z-index: 1;
+  }
+  .step-body { flex: 1; padding-top: 3px; }
+  .step-body h5 { font-size: 1.02rem; font-weight: 700; margin-bottom: 2px; }
+  .step-body .who {
+    font-size: 0.76rem; color: var(--text-muted); font-style: italic; margin-bottom: 8px;
+  }
+  .step-body p { color: var(--text-muted); font-size: 0.89rem; }
+  .panel-tag {
+    display: inline-block; background: rgba(34,197,94,0.12);
+    border: 1px solid rgba(34,197,94,0.35); color: #4ade80;
+    font-size: 0.67rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    padding: 2px 8px; border-radius: 20px; margin-left: 8px; vertical-align: middle;
+  }
+
+  /* ── Mapping table ───────────────────────────────────────────────────── */
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 520px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: var(--surface); }
+
+  /* ── Callout / citation ──────────────────────────────────────────────── */
+  .callout {
+    background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25);
+    border-radius: var(--radius); padding: 18px 22px; font-size: 0.9rem;
+  }
+  .callout.warn {
+    background: rgba(245,158,11,0.07); border-color: rgba(245,158,11,0.3);
+  }
+  .cite {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 22px;
+  }
+  .cite .ref { font-size: 0.95rem; }
+  .cite .ref em { color: var(--text); font-style: italic; }
+  pre {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; margin-top: 14px; overflow-x: auto;
+    font-size: 0.78rem; color: var(--text-muted); line-height: 1.5;
+  }
+  code { font-family: 'Cascadia Code', Consolas, monospace; }
+
+  footer {
+    border-top: 1px solid var(--border); padding: 28px 0 40px;
+    color: var(--text-muted); font-size: 0.83rem; text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .hero { padding: 56px 0 44px; }
+    .hero h2 { font-size: 1.9rem; }
+    .nav { padding: 12px 18px; }
+    .nav-links a:not(.nav-cta) { display: none; }
+    .wrap { padding: 0 18px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <svg class="logo" width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><path class="logo-cover" d="M16 3h32a4 4 0 0 1 4 4v44H16a4 4 0 0 0-4 4V7a4 4 0 0 1 4-4z"/><path class="logo-pages" d="M52 51v7H16a3.5 3.5 0 0 1 0-7z"/><path class="logo-tree" d="M35 17L27 32M35 17l8 15"/><circle class="logo-node" cx="35" cy="17" r="4.6"/><circle class="logo-node" cx="27" cy="32" r="3.8"/><circle class="logo-node" cx="43" cy="32" r="3.8"/><path class="logo-ribbon" d="M40 55v9l3.5-2.5L47 64v-9z"/></svg>
+  <h1>LITMO</h1>
+  <span class="badge">OWL</span>
+  <div class="nav-links">
+    <a href="#momo">MOMo</a>
+    <a href="#steps">The 10 Steps</a>
+    <a href="#tool">In the Tool</a>
+    <a href="#paper">Paper</a>
+    <a class="nav-cta" href="/app">Launch Tool →</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ── Hero ──────────────────────────────────────────────────────────── -->
+  <div class="hero">
+    <span class="eyebrow">Modular Ontology Modeling</span>
+    <h2>Build OWL ontologies that are modular, extensible and reusable</h2>
+    <p>
+      An AI-assisted workspace for developing OWL ontologies following the <strong>MOMo</strong> methodology
+      by Shimizu, Hammar and Hitzler. The conceptual work comes first — use cases, competency questions,
+      key notions and design patterns — and the OWL file is deliberately the last step.
+    </p>
+    <div class="hero-btns">
+      <a class="btn btn-primary" href="/app">Launch the Tool →</a>
+      <a class="btn btn-secondary" href="#momo">What is MOMo?</a>
+    </div>
+  </div>
+
+  <!-- ── What the tool does ────────────────────────────────────────────── -->
+  <section id="tool-overview">
+    <h3>What the tool does</h3>
+    <p class="lede">
+      A guided eight-panel workspace that walks a team through MOMo end to end, using a large language model
+      as a drafting partner at each stage. Every suggestion is editable — the model proposes, you decide.
+    </p>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">💬</div>
+        <h5>Competency questions</h5>
+        <p>Draft and refine the natural-language questions your knowledge graph must be able to answer.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🧩</div>
+        <h5>Key notions → modules</h5>
+        <p>Define the handful of central concepts the ontology is built around. Optional suggestions point out implicit ones you may have missed.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📐</div>
+        <h5>Design patterns</h5>
+        <p>Match each notion to a pattern from the ODPA Patterns Repository to serve as the template for its module.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🕸️</div>
+        <h5>Interactive graph</h5>
+        <p>Inspect classes, properties, individuals and axioms as tables or as a navigable graph.</p>
+      </div>
+      <div class="card">
+        <div class="ico">✅</div>
+        <h5>Automatic quality checks</h5>
+        <p>Turtle syntax validation via rdflib plus OOPS! pitfall scanning, with automatic correction.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📦</div>
+        <h5>OWL export with provenance</h5>
+        <p>Turtle output carrying OPLa annotations that record each module and the pattern it came from.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MOMo intro ────────────────────────────────────────────────────── -->
+  <section id="momo">
+    <h3>What is MOMo?</h3>
+    <p class="lede">
+      <strong>Modular Ontology Modeling</strong> is a methodology for building ontologies out of reusable
+      <em>modules</em> rather than as a single monolithic artifact. Its central commitment is that most of the
+      work is <em>conceptual</em> — discussion, schema diagrams and documentation — and that the formal OWL file
+      is only the final translation of decisions already made.
+    </p>
+
+    <div class="principle">
+      <strong>Modular, extensible, reusable — not a one-off</strong>
+      <p>The problem is described deliberately loosely, often covering a set of related use cases and even
+      future extensions currently out of scope, to keep the ontology suitable for adjacent purposes.</p>
+    </div>
+    <div class="principle">
+      <strong>One key notion, one module</strong>
+      <p>Key notions are derived from the use case, data sources and competency questions together. Each
+      typically becomes a module, modeled in isolation while engineers watch cross-module compatibility.</p>
+    </div>
+    <div class="principle">
+      <strong>Patterns as templates</strong>
+      <p>Where a curated pattern library offers a close enough fit, the pattern serves as the template for the
+      module. If none fits, the module is simply built from scratch.</p>
+    </div>
+    <div class="principle">
+      <strong>Schema diagrams as prompts</strong>
+      <p>The engineer sketches a tentative diagram from a naturally limited understanding and uses it to
+      <em>provoke</em> domain experts into pointing out deficiencies. The draft need not be close to the final
+      solution — its job is to get refined, modified or rejected outright.</p>
+    </div>
+    <div class="principle">
+      <strong>Documentation is part of the ontology</strong>
+      <p>A bare OWL file is hard to understand, and humans are who mostly deal with it. Each module's diagram
+      is paired with its formal axioms and a natural-language reading of them.</p>
+    </div>
+    <div class="principle">
+      <strong>Prefer scoped axioms over global ones</strong>
+      <p>Rather than a global domain <code>∃R.⊤ ⊑ B</code>, use a scoped <code>∃R.A ⊑ B</code>. Scoped domain,
+      range, functionality and cardinality axioms are easier to reuse and less likely to be wrong in a
+      different context.</p>
+    </div>
+    <div class="principle">
+      <strong>Provenance against feature creep</strong>
+      <p>Tracing requirements from use cases → competency questions → key notions → modules keeps the scope
+      honest and avoids premature generalization.</p>
+    </div>
+  </section>
+
+  <!-- ── The 10 steps ──────────────────────────────────────────────────── -->
+  <section id="steps">
+    <h3>The ten MOMo steps</h3>
+    <p class="lede">
+      The methodology proceeds in ten steps, with responsibility shifting between the whole team and the
+      ontology engineers. Green tags show where each step lives in this tool.
+    </p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h5>Describe use cases and gather possible data sources <span class="panel-tag">Panels 2–4</span></h5>
+          <div class="who">Responsible: entire team</div>
+          <p>The problem is described deliberately loosely — a paragraph can be enough, and it need not be
+          crisp. It may cover several related use cases and future extensions. Alongside the problem, capture
+          the existing data sources the ontology must represent or align against.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h5>Gather competency questions <span class="panel-tag">Panel 5</span></h5>
+          <div class="who">Responsible: entire team</div>
+          <p>Competency questions are example queries of interest, in natural language, that the populated
+          knowledge graph should answer. They refine the use case and sanity-check whether the data sources
+          are adequate. Collecting them from potential future users works well; 10–12 sufficiently different
+          questions are generally enough.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h5>Identify key notions for the domain <span class="panel-tag">Panel 6</span></h5>
+          <div class="who">Responsible: entire team</div>
+          <p>The central step that sets up the modeling. Generalize the use case and competency questions into
+          instance-free statements and note which noun terms recur. Human judgement is needed to surface
+          implicit or "hidden" concepts — technically <em>enslavement</em> is a momentary event, but
+          <em>being enslaved</em> is a state with temporal duration, and that state is likely the real key notion.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h5>Identify existing ontology design patterns <span class="panel-tag">Panel 7</span></h5>
+          <div class="who">Responsible: ontology engineers</div>
+          <p>For each key notion, search a curated pattern library for a pattern close enough to serve as a
+          template. A single notion may admit several reasonable choices — a <em>Recipe</em> could be a
+          Document, a Plan or a Process — so consult the use case and competency questions to pick the best
+          overall fit.</p>
+          <p style="margin-top:8px;">In this tool the library is the
+          <a href="https://github.com/odpa/patterns-repository" target="_blank" rel="noopener">ODPA Patterns Repository</a>:
+          the model may only choose patterns that exist there, and the chosen pattern's actual classes and properties
+          are handed to the generator as the module template.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h5>Create schema diagrams for modules <span class="panel-tag">Panel 8</span></h5>
+          <div class="who">Responsible: entire team, led by ontology engineers</div>
+          <p>The intensive, synchronous heart of the process. Notions are modeled one at a time, starting with
+          those that are central or clearly derivable from a pattern and deferring the controversial ones.
+          Because diagrams are inherently ambiguous, engineers actively manage interpretation and ask experts
+          concrete questions about intended meaning.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h5>Set up documentation and determine axioms per module <span class="panel-tag">Panel 8</span></h5>
+          <div class="who">Responsible: ontology engineers &amp; domain experts</div>
+          <p>Each module's schema diagram is paired with its formal OWL axioms plus a natural-language listing
+          of them. Axioms here serve mainly to disambiguate meaning rather than to enable reasoning, so experts
+          are asked pointed questions to pin them down.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h5>Create the ontology-wide schema diagram <span class="panel-tag">Panel 8</span></h5>
+          <div class="who">Responsible: ontology engineers</div>
+          <p>Individual module diagrams are composed into a single combined diagram. The overriding priority is
+          understandability — and the catch-all guideline is to break any other guideline if it makes the
+          diagram clearer.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">8</div>
+        <div class="step-body">
+          <h5>Add spanning axioms <span class="panel-tag">Partly in the tool</span></h5>
+          <div class="who">Responsible: ontology engineers</div>
+          <p>The whole ontology is examined for axioms spanning more than one module. These tend to be more
+          complex, and are often easier for humans to write and read when expressed as rules. The tool writes class
+          restrictions ("every A has some p to a B") during generation and offers them as a repair tool for class
+          pairs the ontology connects only loosely.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">9</div>
+        <div class="step-body">
+          <h5>Reflect on entity naming and all axioms <span class="panel-tag">Partly in the tool</span></h5>
+          <div class="who">Responsible: ontology engineers</div>
+          <p>Good, consistent names greatly aid reuse: singular and specific class names in CamelCase,
+          lowercase verb-based property names with consistent inverses. It is fine to focus on structure during
+          modeling and defer naming to here, since names are easy to change during documentation. The tool applies
+          the project's naming conventions and checks the result with OOPS!.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">10</div>
+        <div class="step-body">
+          <h5>Create the OWL file(s) <span class="panel-tag">Panel 8</span></h5>
+          <div class="who">Responsible: ontology engineers</div>
+          <p>The formal OWL file is produced last, reinforcing that most of the work is conceptual and the file
+          is only the final translation. For maintainability it carries OPLa annotations identifying the
+          modules and which pattern each was based on.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Mapping ───────────────────────────────────────────────────────── -->
+  <section id="tool">
+    <h3>How the steps map onto the tool</h3>
+    <p class="lede">
+      The steps are consolidated into eight panels, so closely related steps share a workspace. Steps 8 and 9
+      are currently not covered by the tool.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Panel</th><th>MOMo steps</th><th>What you do there</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1 · Configure LLM</td><td>—</td><td>Choose a provider and model.</td></tr>
+          <tr><td>2 · Use Case &amp; Data Sources</td><td>1</td><td>Describe the problem loosely; name data sources; upload files.</td></tr>
+          <tr><td>3 · Literature (optional)</td><td>1</td><td>Upload papers, existing ontologies and concept tables. Each paper is condensed into a paper card (concepts with definition, page and verified quote, relations, taxonomies, candidate questions); ontologies and tables are read directly. Everything is merged into a concept inventory with conflicts, candidate modules, and what existing ontologies already cover.</td></tr>
+          <tr><td>4 · Project Context</td><td>1</td><td>Confirm a drafted context document — purpose, scope, glossary, domain rules, data, reuse — answer targeted questions, and set conventions.</td></tr>
+          <tr><td>5 · Competency Questions</td><td>2</td><td>Draft and edit the questions the graph must answer.</td></tr>
+          <tr><td>6 · Key Notions &amp; Modules</td><td>3</td><td>Define the few central concepts that each anchor a module; optionally ask for suggestions of missing ones.</td></tr>
+          <tr><td>7 · Patterns &amp; Standards</td><td>4</td><td>Pick an ODPA design pattern per notion; select vocabularies to reuse.</td></tr>
+          <tr><td>8 · Model &amp; Generate</td><td>5, 6, 7, 10</td><td>Generate and iterate on the modular ontology; inspect and export it.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout warn" style="margin-top:26px;">
+      <strong>⚠️ A note on the diagram steps.</strong>
+      MOMo Steps 5 and 7 center on iterative, human-in-the-loop schema diagrams used as prompts to provoke
+      domain experts. This tool renders a whole-ontology graph, which covers Step 7 reasonably well, but it
+      does not replace Step 5's synchronous sketch–critique–refine sessions with domain experts. The tool
+      supports that conversation; it does not substitute for it.
+    </div>
+
+    <div class="callout" style="margin-top:14px;">
+      <strong>💡 Guidance, not gatekeeping.</strong>
+      MOMo puts the OWL file last on purpose, and the tool shows you when conceptual steps are still missing —
+      but it never blocks you. You can generate at any point and work backwards if that suits how your team works.
+    </div>
+  </section>
+
+  <!-- ── Paper ─────────────────────────────────────────────────────────── -->
+  <section id="paper">
+    <h3>The paper behind the method</h3>
+    <p class="lede">
+      This tool implements the methodology described in the following article. It is an independent
+      implementation and is not affiliated with the authors.
+    </p>
+    <div class="cite" style="margin-bottom:14px;">
+      <div class="ref">
+        Cogan Shimizu, Karl Hammar, and Pascal Hitzler.
+        <em>Modular ontology modeling.</em>
+        Semantic Web, 14(3):459–489, 2023. SAGE Publications, London, England.
+      </div>
+      <pre><code>@article{shimizu2023modular,
+  title={Modular ontology modeling},
+  author={Shimizu, Cogan and Hammar, Karl and Hitzler, Pascal},
+  journal={Semantic Web},
+  volume={14},
+  number={3},
+  pages={459--489},
+  year={2023},
+  publisher={SAGE Publications Sage UK: London, England}
+}</code></pre>
+    </div>
+    <div class="cite">
+      <div class="ref">
+        Design patterns are taken from the
+        <a href="https://github.com/odpa/patterns-repository" target="_blank" rel="noopener"><em>ODPA Patterns Repository</em></a>,
+        a community-maintained collection of ontology design patterns. Each module built from a pattern links back to
+        its source file via an OPLa <code>reusesPatternAsTemplate</code> annotation in the exported OWL.
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ───────────────────────────────────────────────────────────── -->
+  <section style="text-align:center;">
+    <h3>Ready to start?</h3>
+    <p class="lede" style="margin:0 auto 28px;">
+      Begin with the use case. The tool will take you through the rest.
+    </p>
+    <a class="btn btn-primary" href="/app">Launch the Tool →</a>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    LITMO – LITerature-driven Modular Ontologies · built on the MOMo methodology (Shimizu, Hammar &amp; Hitzler, 2023)
+  </div>
+</footer>
+
+</body>
+</html>
