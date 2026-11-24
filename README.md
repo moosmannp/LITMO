@@ -2,6 +2,8 @@
 
 # LITMO – LITerature-driven Modular Ontologies
 
+> **LITMO has moved.** This repository holds version 0.2 and is no longer updated. Current versions, from 0.3 on under the Apache License 2.0, are at **[github.com/Fraunhofer-FIT-DSAI/LITMO](https://github.com/Fraunhofer-FIT-DSAI/LITMO)**; please open issues there.
+
 A web tool for building OWL ontologies with a large language model as a drafting partner. It follows the
 **MOMo** (Modular Ontology Modeling) methodology of Shimizu, Hammar & Hitzler, so the ontology is built
 conceptually first (use case, competency questions, key notions, design patterns) and the OWL file comes last.
